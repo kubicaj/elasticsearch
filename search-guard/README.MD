@@ -7,7 +7,7 @@
 * openssl
 * keytool
 * root certificate (if not exists then generate)
-* root public key. If you alerady have root certificate then extract key from them with following command
+* root private key for sign the node certificate
 
 ### Download plugin
 At first you have to download plugin from elasticserch repository. Before installation, check if you have correct settings of maven to access central repository.
@@ -75,6 +75,12 @@ This certificate is mostly provided by customers or third parties. But if you ne
     PS> openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt
 ```
 
+#### root certificate trustore
+
+```
+keytool -import -file rootCA.crt -alias rootCa -keystore truststore.jks
+```
+
 #### node certificate
 Generate the certificate using domain csr and key along with the CA Root key. For example for *node1* with pass *pass123*
 
@@ -86,7 +92,7 @@ keytool -genkey -alias <ALIAS_KEYSTORE> -keystore <NODE_NAME>-keystore.jks -keya
 
 # sample:
 
-keytool -genkey -alias node1 -keystore node1-keystore.jks -keyalg RSA -keysize 2048 -validity 712 -sigalg SHA256withRSA -keypass pass123 -storepass pass123 -dname "CN=node1.example.com, OU=SSL, O=Test, L=Test, C=DE" -ext san=dns:localhost
+keytool -genkey -alias node1 -keystore node1-keystore.jks -keyalg RSA -keysize 2048 -validity 712 -sigalg SHA256withRSA -keypass pass123 -storepass pass123 -dname "CN=node1, OU=Org, O=Org, L=Prague, C=CZ, ST=Czech Republic" -ext san=dns:localhost
 ```
 
 2. Generating certificate signing request for node1 - create .csr domain file
@@ -97,7 +103,7 @@ keytool -certreq -alias <ALIAS_KEYSTORE> -keystore <NODE_NAME>-keystore.jks -fil
 
 # sample:
 
-keytool -certreq -alias node1 -keystore node1-keystore.jks -file node1.csr -keyalg rsa -keypass pass123 -storepass pass123 -dname "CN=node1.example.com, OU=SSL, O=Test, L=Test, C=DE" -ext san=dns:localhost
+keytool -certreq -alias node1 -keystore node1-keystore.jks -file node1.csr -keyalg rsa -keypass pass123 -storepass pass123 -dname "CN=node1, OU=Org, O=Org, L=Prague, C=CZ, ST=Czech Republic" -ext san=dns:localhost
 ```
 
 3. Sign certificate request by CA
@@ -111,14 +117,17 @@ PS> openssl x509 -req -in <CSR_FILE>.csr -CA <ROOT_CRT>.crt -CAkey <ROOT_PRIVATE
 PS> openssl x509 -req -in node1.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out node1.crt -days 500 -sha256
 ```
 
-4. Import certificate back to keystore
+4. Import certificate back to keystore. At first import trusted certificate and then reimport client certificate
 ```
-# pattern:
-PS> keytool -import -file <IMPORTED_CERT> -alias <ALIAS> -keystore <DEST_KEYSTORE> -storepass <PASS>
+# pattern (two commands which are the same):
+
+PS> keytool -import -file <IMPORTED_CERT> -alias <ALIAS> -keystore <DEST_KEYSTORE> -storepass <PASS> -trustcacerts -file <TRSUSTSTORE>
+PS> keytool -import -file <IMPORTED_CERT> -alias <ALIAS> -keystore <DEST_KEYSTORE> -storepass <PASS> -trustcacerts -file <TRSUSTSTORE>
 
 # sample:
 
-PS> keytool -import -file node1.crt -alias node1 -keystore node1-keystore.jks -storepass pass123
+PS> keytool -import -keystore node1-keystore.jks -file rootCA.crt -alias theCARoot -storepass pass123
+PS> keytool -import -keystore node1-keystore.jks -file node1.crt -alias node1 -storepass pass123
 ```
 
 
