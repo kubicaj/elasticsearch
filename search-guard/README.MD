@@ -8,6 +8,7 @@
 * keytool
 * root certificate (if not exists then generate)
 * root private key for sign the node certificate
+* intermediate certificate
 
 ### Download plugin
 At first you have to download plugin from elasticserch repository. Before installation, check if you have correct settings of maven to access central repository.
@@ -53,10 +54,8 @@ Now the plugin is download in your elasticsearch and you can continue
 
 There are following certificate which you need to create because of searchquard:
 * the root CA used for signing all other certificates
-* esnode.pem — the node certificate used on the transport- and REST-layer.
-* esnode-key.pem — the private key for the node certificate
-* kirk.pem — the admin certificate, allows full access to the cluster and can be used with sgadmin and the REST management API
-* kirk-key.pem — the private key for the admin certificate
+* the node certificate used on the transport- and REST-layer.
+* the admin certificate, allows full access to the cluster and can be used with sgadmin and the REST management API
 
 Let's create them and add them to particular certificate's stores.
 
@@ -72,13 +71,13 @@ This certificate is mostly provided by customers or third parties. But if you ne
 2. Create self sign the Root Certificate. Pass the following command and follow instruction in command line
 
 ```
-    PS> openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt
+PS> openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.crt
 ```
 
 #### root certificate trustore
 
 ```
-keytool -import -file rootCA.crt -alias rootCa -keystore truststore.jks
+PS> keytool -import -file rootCA.crt -alias rootCa -keystore truststore.jks
 ```
 
 #### node certificate
@@ -88,22 +87,22 @@ Generate the certificate using domain csr and key along with the CA Root key. Fo
 ```
 # pattern:
 
-keytool -genkey -alias <ALIAS_KEYSTORE> -keystore <NODE_NAME>-keystore.jks -keyalg RSA -keysize 2048 -validity 712 -sigalg SHA256withRSA -keypass <PASS> -storepass <PASS> -dname "CN=<CERTIFICATE_NAME>, OU=SSL, O=<ORGANIZATION>, L=Prague, C=CZ" -ext san=dns:<DNS_NAME>
+PS> keytool -genkey -alias <ALIAS_KEYSTORE> -keystore <NODE_NAME>-keystore.jks -keyalg RSA -keysize 2048 -validity 712 -sigalg SHA256withRSA -keypass <PASS> -storepass <PASS> -dname "CN=<CERTIFICATE_NAME>, OU=SSL, O=<ORGANIZATION>, L=Prague, C=CZ" -ext san=dns:<DNS_NAME>
 
 # sample:
 
-keytool -genkey -alias node1 -keystore node1-keystore.jks -keyalg RSA -keysize 2048 -validity 712 -sigalg SHA256withRSA -keypass pass123 -storepass pass123 -dname "CN=node1, OU=Org, O=Org, L=Prague, C=CZ, ST=Czech Republic" -ext san=dns:localhost
+PS> keytool -genkey -alias node1 -keystore node1-keystore.jks -keyalg RSA -keysize 2048 -validity 712 -sigalg SHA256withRSA -keypass pass123 -storepass pass123 -dname "CN=node1, OU=Org, O=Org, L=Prague, C=CZ, ST=Czech Republic" -ext san=dns:localhost
 ```
 
 2. Generating certificate signing request for node1 - create .csr domain file
 ```
 # pattern:
 
-keytool -certreq -alias <ALIAS_KEYSTORE> -keystore <NODE_NAME>-keystore.jks -file <CSR_FILE>.csr -keyalg rsa -keypass <PASS> -storepass <PASS> -dname "CN=<CERTIFICATE_NAME>, OU=SSL, O=<ORGANIZATION>, L=Prague, C=CZ" -ext san=dns:<DNS_NAME>
+PS> keytool -certreq -alias <ALIAS_KEYSTORE> -keystore <NODE_NAME>-keystore.jks -file <CSR_FILE>.csr -keyalg rsa -keypass <PASS> -storepass <PASS> -dname "CN=<CERTIFICATE_NAME>, OU=SSL, O=<ORGANIZATION>, L=Prague, C=CZ" -ext san=dns:<DNS_NAME>
 
 # sample:
 
-keytool -certreq -alias node1 -keystore node1-keystore.jks -file node1.csr -keyalg rsa -keypass pass123 -storepass pass123 -dname "CN=node1, OU=Org, O=Org, L=Prague, C=CZ, ST=Czech Republic" -ext san=dns:localhost
+PS> keytool -certreq -alias node1 -keystore node1-keystore.jks -file node1.csr -keyalg rsa -keypass pass123 -storepass pass123 -dname "CN=node1, OU=Org, O=Org, L=Prague, C=CZ, ST=Czech Republic" -ext san=dns:localhost
 ```
 
 3. Sign certificate request by CA
