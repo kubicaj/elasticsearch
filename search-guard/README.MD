@@ -129,4 +129,55 @@ PS> keytool -import -keystore node1-keystore.jks -file rootCA.crt -alias theCARo
 PS> keytool -import -keystore node1-keystore.jks -file node1.crt -alias node1 -storepass pass123
 ```
 
+#### admin certificate
+The process if the same as for node certificate. The admin cetificate named krik.
+
+Generate the certificate using domain csr and key along with the CA Root key. For example for *krik* with pass *pass123*
+
+1. Generate .jks
+```
+# pattern:
+
+PS> keytool -genkey -alias <ALIAS_KEYSTORE> -keystore krik.jks -keyalg RSA -keysize 2048 -validity 712 -sigalg SHA256withRSA -keypass <PASS> -storepass <PASS> -dname "CN=<CERTIFICATE_NAME>, OU=SSL, O=<ORGANIZATION>, L=Prague, C=CZ" -ext san=dns:<DNS_NAME>
+
+# sample:
+
+PS> keytool -genkey -alias krik -keystore krik.jks -keyalg RSA -keysize 2048 -validity 712 -sigalg SHA256withRSA -keypass pass123 -storepass pass123 -dname "CN=krik, OU=Org, O=Org, L=Prague, C=CZ, ST=Czech Republic" -ext san=dns:localhost
+```
+
+2. Generating certificate signing request for node1 - create .csr domain file
+```
+# pattern:
+
+PS> keytool -certreq -alias krik -keystore krik.jks -file <CSR_FILE>.csr -keyalg rsa -keypass <PASS> -storepass <PASS> -dname "CN=<CERTIFICATE_NAME>, OU=SSL, O=<ORGANIZATION>, L=Prague, C=CZ" -ext san=dns:<DNS_NAME>
+
+# sample:
+
+PS> keytool -certreq -alias krik -keystore krik.jks -file krik.csr -keyalg rsa -keypass pass123 -storepass pass123 -dname "CN=krik, OU=Org, O=Org, L=Prague, C=CZ, ST=Czech Republic" -ext san=dns:localhost
+```
+
+3. Sign certificate request by CA
+```
+# pattern:
+
+PS> openssl x509 -req -in <CSR_FILE>.csr -CA <ROOT_CRT>.crt -CAkey <ROOT_PRIVATE_KEY>.key -CAcreateserial -out <OUT_CRT>.crt -days 500 -sha256
+
+# sample:
+
+PS> openssl x509 -req -in krik.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out krik.crt -days 500 -sha256
+```
+
+4. Import certificate back to keystore. At first import trusted certificate and then reimport client certificate
+```
+# pattern (two commands which are the same):
+
+PS> keytool -import -file <IMPORTED_CERT> -alias <ALIAS> -keystore krik.jks -storepass <PASS> -trustcacerts -file <TRSUSTSTORE>
+PS> keytool -import -file <IMPORTED_CERT> -alias <ALIAS> -keystore krik.jks -storepass <PASS> -trustcacerts -file <TRSUSTSTORE>
+
+# sample:
+
+PS> keytool -import -keystore krik.jks -file rootCA.crt -alias theCARoot -storepass pass123
+PS> keytool -import -keystore krik.jks -file krik.crt -alias krik -storepass pass123
+```
+
 
