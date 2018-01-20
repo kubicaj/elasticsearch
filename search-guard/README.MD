@@ -130,7 +130,7 @@ PS> keytool -import -keystore node1-keystore.jks -file node1.crt -alias node1 -s
 ```
 
 #### admin certificate
-The process if the same as for node certificate. The admin cetificate named krik.
+The process if the same as for node certificate. This certificate can has the own trustore
 
 Generate the certificate using domain csr and key along with the CA Root key. For example for *krik* with pass *pass123*
 
@@ -138,22 +138,22 @@ Generate the certificate using domain csr and key along with the CA Root key. Fo
 ```
 # pattern:
 
-PS> keytool -genkey -alias <ALIAS_KEYSTORE> -keystore krik.jks -keyalg RSA -keysize 2048 -validity 712 -sigalg SHA256withRSA -keypass <PASS> -storepass <PASS> -dname "CN=<CERTIFICATE_NAME>, OU=SSL, O=<ORGANIZATION>, L=Prague, C=CZ" -ext san=dns:<DNS_NAME>
+PS> keytool -genkey -alias <ALIAS_KEYSTORE> -keystore <KEYSTORE_NAME>.jks -keyalg RSA -keysize 2048 -validity 712 -sigalg SHA256withRSA -keypass <PASS> -storepass <PASS> -dname "CN=<CERTIFICATE_NAME>, OU=SSL, O=<ORGANIZATION>, L=Prague, C=CZ" -ext san=dns:<DNS_NAME>
 
 # sample:
 
-PS> keytool -genkey -alias krik -keystore krik.jks -keyalg RSA -keysize 2048 -validity 712 -sigalg SHA256withRSA -keypass pass123 -storepass pass123 -dname "CN=krik, OU=Org, O=Org, L=Prague, C=CZ, ST=Czech Republic" -ext san=dns:localhost
+PS> keytool -genkey -alias admin -keystore krik.jks -keyalg RSA -keysize 2048 -validity 712 -sigalg SHA256withRSA -keypass pass123 -storepass pass123 -dname "CN=krik, OU=Org, O=Org, L=Prague, C=CZ, ST=Czech Republic" -ext san=dns:localhost
 ```
 
 2. Generating certificate signing request for node1 - create .csr domain file
 ```
 # pattern:
 
-PS> keytool -certreq -alias krik -keystore krik.jks -file <CSR_FILE>.csr -keyalg rsa -keypass <PASS> -storepass <PASS> -dname "CN=<CERTIFICATE_NAME>, OU=SSL, O=<ORGANIZATION>, L=Prague, C=CZ" -ext san=dns:<DNS_NAME>
+PS> keytool -certreq -alias <ALIAS> -keystore <KEYSTORE_NAME>.jks -file <CSR_FILE>.csr -keyalg rsa -keypass <PASS> -storepass <PASS> -dname "CN=<CERTIFICATE_NAME>, OU=SSL, O=<ORGANIZATION>, L=Prague, C=CZ" -ext san=dns:<DNS_NAME>
 
 # sample:
 
-PS> keytool -certreq -alias krik -keystore krik.jks -file krik.csr -keyalg rsa -keypass pass123 -storepass pass123 -dname "CN=krik, OU=Org, O=Org, L=Prague, C=CZ, ST=Czech Republic" -ext san=dns:localhost
+PS> keytool -certreq -alias admin -keystore admin-keystore.jks -file krik.csr -keyalg rsa -keypass pass123 -storepass pass123 -dname "CN=krik, OU=Org, O=Org, L=Prague, C=CZ, ST=Czech Republic" -ext san=dns:localhost
 ```
 
 3. Sign certificate request by CA
@@ -164,20 +164,20 @@ PS> openssl x509 -req -in <CSR_FILE>.csr -CA <ROOT_CRT>.crt -CAkey <ROOT_PRIVATE
 
 # sample:
 
-PS> openssl x509 -req -in krik.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out krik.crt -days 500 -sha256
+PS> openssl x509 -req -in admin.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out admin.crt -days 500 -sha256
 ```
 
 4. Import certificate back to keystore. At first import trusted certificate and then reimport client certificate
 ```
 # pattern (two commands which are the same):
 
-PS> keytool -import -file <IMPORTED_CERT> -alias <ALIAS> -keystore krik.jks -storepass <PASS> -trustcacerts -file <TRSUSTSTORE>
-PS> keytool -import -file <IMPORTED_CERT> -alias <ALIAS> -keystore krik.jks -storepass <PASS> -trustcacerts -file <TRSUSTSTORE>
+PS> keytool -import -file <IMPORTED_CERT> -alias <ALIAS> -keystore admin-keystore.jks -storepass <PASS> -trustcacerts -file <TRSUSTSTORE>
+PS> keytool -import -file <IMPORTED_CERT> -alias <ALIAS> -keystore admin-keystore.jks -storepass <PASS> -trustcacerts -file <TRSUSTSTORE>
 
 # sample:
 
-PS> keytool -import -keystore krik.jks -file rootCA.crt -alias theCARoot -storepass pass123
-PS> keytool -import -keystore krik.jks -file krik.crt -alias krik -storepass pass123
+PS> keytool -import -keystore admin-keystore.jks -file rootCA.crt -alias theCARoot -storepass pass123
+PS> keytool -import -keystore admin-keystore.jks -file admin.crt -alias krik -storepass pass123
 ```
 
 ## Initialization of environment
@@ -235,8 +235,85 @@ searchguard.ssl.http.keystore_password: pass123
 # trsutstore pass
 searchguard.ssl.http.truststore_password: pass123
 
-# the kirk certification field
+# the certification field of admin cert.
 searchguard.authcz.admin_dn:
   - CN=kirk,OU=Org,O=Org,L=Prague, C=CZ, ST=Czech Republic 
 ```
+
+### Initialization of searchquard
+
+Now you can run elasticsearch and pass the following URL:
+
+```
+https://<HOST_NAME>:9200/
+```
+
+As result you will se the announcement that the search quard need to be init:
+
+```
+Search Guard not initialized (SG11). See https://github.com/floragunncom/search-guard-docs/blob/master/sgadmin.md
+```
+Now you have to init searchquard. Go to folder <ES>\plugins\search-guard-5\tools\ and init searchquard via script *sgadmin.bat* with parameter:
+    * ks - The location of the keystore containing the admin certificate and all intermediate certificates, if any. You can use an absolute or relative path. Relative paths are resolved relative to the execution directory of sgadmin.
+    * kspass - The password for the keystore.
+    * The location of the truststore containing the root certificate. You can use an absolute or relative path. Relative paths are resolved relative to the execution directory of sgadmin.
+    * The password for the truststore.
+
+```
+# Sample:
+.\sgadmin.bat -cd C:\elasticsearch\plugins\search-guard-5\sgconfig\ -ks C:\elasticsearch\config\admin\admin-keystore.jks -kspass pass123 -ts C:\elasticsearch\config\admin\admin-truststore.jks -tspass pass123 -nhnv -icl --diagnose
+```
+
+The output in case of successfully result
+```
+Search Guard Admin v5
+Will connect to localhost:9300 ... done
+Diagnostic trace written to: C:\elasticsearch\plugins\search-guard-5\tools\sgadmin_diag_trace_2018-Jan-20_22-20-17.t
+xt
+Contacting elasticsearch cluster 'elasticsearch' and wait for YELLOW clusterstate ...
+Clustername: elasticsearch
+Clusterstate: YELLOW
+Number of nodes: 1
+Number of data nodes: 1
+searchguard index already exists, so we do not need to create one.
+Populate config from C:\mci\elasticsearch\plugins\search-guard-5\sgconfig\
+Will update 'config' with C:\elasticsearch\plugins\search-guard-5\sgconfig\sg_config.yml
+   SUCC: Configuration for 'config' created or updated
+Will update 'roles' with C:\elasticsearch\plugins\search-guard-5\sgconfig\sg_roles.yml
+   SUCC: Configuration for 'roles' created or updated
+Will update 'rolesmapping' with C:\elasticsearch\plugins\search-guard-5\sgconfig\sg_roles_mapping.yml
+   SUCC: Configuration for 'rolesmapping' created or updated
+Will update 'internalusers' with C:\elasticsearch\plugins\search-guard-5\sgconfig\sg_internal_users.yml
+   SUCC: Configuration for 'internalusers' created or updated
+Will update 'actiongroups' with C:\elasticsearch\plugins\search-guard-5\sgconfig\sg_action_groups.yml
+   SUCC: Configuration for 'actiongroups' created or updated
+Done with success
+```
+
+Now you can run elasticsearch and pass the following URL again:
+
+```
+https://<HOST_NAME>:9200/
+```
+
+The login page is display and you have to pass the *sq user*. For example default login=kirk, pass=kirk. Then you are allowed to use elastic and the following page is display:
+
+```
+{
+  "name" : "wWtDFNV",
+  "cluster_name" : "elasticsearch",
+  "cluster_uuid" : "WcFg-WUsS4-W0hBquly-ZQ",
+  "version" : {
+    "number" : "5.3.1",
+    "build_hash" : "5f9cf58",
+    "build_date" : "2017-04-17T15:52:53.846Z",
+    "build_snapshot" : false,
+    "lucene_version" : "6.4.2"
+  },
+  "tagline" : "You Know, for Search"
+}
+```
+
+
+
 
