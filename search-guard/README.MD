@@ -142,7 +142,7 @@ PS> keytool -genkey -alias <ALIAS_KEYSTORE> -keystore <KEYSTORE_NAME>.jks -keyal
 
 # sample:
 
-PS> keytool -genkey -alias admin -keystore krik.jks -keyalg RSA -keysize 2048 -validity 712 -sigalg SHA256withRSA -keypass pass123 -storepass pass123 -dname "CN=krik, OU=Org, O=Org, L=Prague, C=CZ, ST=Czech Republic" -ext san=dns:localhost
+PS> keytool -genkey -alias admin -keystore admin-keystore.jks -keyalg RSA -keysize 2048 -validity 712 -sigalg SHA256withRSA -keypass pass123 -storepass pass123 -dname "CN=krik, OU=Org, O=Org, L=Prague, C=CZ, ST=Czech Republic" -ext san=dns:localhost
 ```
 
 2. Generating certificate signing request for node1 - create .csr domain file
@@ -202,7 +202,7 @@ Mode                LastWriteTime     Length Name
 d----         20.1.2018     11:41            scripts
 -a---         20.1.2018     20:40       3753 elasticsearch.yml
 -a---         17.4.2017     15:50       3117 jvm.options
--a---         20.1.2018     20:19       4262 krik.jks
+-a---         20.1.2018     20:19       4262 admin-keystore.jks
 -a---         17.4.2017     15:50       4456 log4j2.properties
 -a---         20.1.2018     19:19       2245 node1-keystore.jks
 -a---         20.1.2018     19:19       1060 truststore.jks
@@ -297,7 +297,7 @@ Now you can run elasticsearch and pass the following URL again:
 https://<HOST_NAME>:9200/
 ```
 
-The login page is display and you have to pass the *sq user*. For example default login=kirk, pass=kirk. Then you are allowed to use elastic and the following page is display:
+The login page is display and you have to pass the *sq user and password*. For example default login=kirk, pass=kirk. Then you are allowed to use elastic and the following page is display:
 
 ```
 {
