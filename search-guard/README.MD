@@ -1,4 +1,4 @@
-## Instalation of search-quard plugin on Windows OS
+# Instalation of search-quard plugin on Windows OS
 
 ### Requirements
 * elasticsearch version 5.3.1
@@ -10,7 +10,7 @@
 * root private key for sign the node certificate
 * intermediate certificate
 
-### Download plugin
+## Download plugin
 At first you have to download plugin from elasticserch repository. Before installation, check if you have correct settings of maven to access central repository.
 You have to open powershell pass the following command:
 
@@ -180,4 +180,63 @@ PS> keytool -import -keystore krik.jks -file rootCA.crt -alias theCARoot -storep
 PS> keytool -import -keystore krik.jks -file krik.crt -alias krik -storepass pass123
 ```
 
+## Initialization of environment
+
+### Copy certificates
+
+1. The first you have to add all certificates into config folder of ES. The path is following: <ES>\config\
+2. Create the empty *scripts* in configuration folder of ES. You can use the following command
+    
+```
+PS> mkdir <ES_HOME>\elasticsearch\config\scripts     
+```    
+
+Then the content of config file has to looks like this:
+ 
+
+    Directory: <ES_HOME>\elasticsearch\config
+
+```
+Mode                LastWriteTime     Length Name
+----                -------------     ------ ----
+d----         20.1.2018     11:41            scripts
+-a---         20.1.2018     20:40       3753 elasticsearch.yml
+-a---         17.4.2017     15:50       3117 jvm.options
+-a---         20.1.2018     20:19       4262 krik.jks
+-a---         17.4.2017     15:50       4456 log4j2.properties
+-a---         20.1.2018     19:19       2245 node1-keystore.jks
+-a---         20.1.2018     19:19       1060 truststore.jks
+```
+
+### Update config file
+Into *<ES_HOME>\elasticsearch\config\elasticsearch.yml*  add the following lines (Edit as you need)
+```
+############ The settings of transport protocol ############
+# Relative path to the keystore file
+searchguard.ssl.transport.keystore_filepath: node1-keystore.jks
+# Relative path to the truststore file
+searchguard.ssl.transport.truststore_filepath: truststore.jks
+# Enforce hostname verification (default: true). If true then the certification domain is check as well
+#searchguard.ssl.transport.enforce_hostname_verification: true
+# keystore pass
+searchguard.ssl.transport.keystore_password: pass123
+# trsutstore pass
+searchguard.ssl.transport.truststore_password: pass123
+
+############ The settings of http protocol ############
+# enable/disable http interface
+searchguard.ssl.http.enabled: true
+# Relative path to the keystore file
+searchguard.ssl.http.keystore_filepath: node1-keystore.jks
+# Relative path to the truststore file
+searchguard.ssl.http.truststore_filepath: truststore.jks
+# keystore pass
+searchguard.ssl.http.keystore_password: pass123
+# trsutstore pass
+searchguard.ssl.http.truststore_password: pass123
+
+# the kirk certification field
+searchguard.authcz.admin_dn:
+  - CN=kirk,OU=Org,O=Org,L=Prague, C=CZ, ST=Czech Republic 
+```
 
