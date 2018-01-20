@@ -10,10 +10,13 @@
 At first you have to download plugin from elasticserch repository. Before installation, check if you have correct settings of maven to access central repository.
 You have to open powershell pass the following command:
 
+```
     PS> <ELASTICSEARCH-HOME>/bin/elasticsearch-plugin install -b com.floragunn:search-guard:5-5.3.1-15
-    
+```   
+
 After instalattion the following warning will be display. But do not worry. In installation command you passed the argument **-b** which means that you automatic confirm of security permissions
-    
+
+```   
     [=================================================] 100%  
     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @     WARNING: plugin requires additional permissions     @
@@ -39,7 +42,8 @@ After instalattion the following warning will be display. But do not worry. In i
     * javax.security.auth.AuthPermission modifyPrivateCredentials
     * javax.security.auth.kerberos.ServicePermission * accept
     See http://docs.oracle.com/javase/8/docs/technotes/guides/security/permissions.html
-    
+
+```    
 Now the plugin is download in your elasticsearch and you can continue
 
 ### Create all associated certificates
@@ -56,13 +60,29 @@ Let's create them and add them to particular certificate's stores.
 #### root-ca.pem
 This certificate is mostly provided by customers or third parties. But if you need to create it then follow the following steps:
 
-1. Create the certification folder and set your path location(for example user/<USER_NAME>/certification-test)
-    PS> mkdir C:\Users\<USER_NAME>\certificate-test\root-ca
+1. Create the certification folder and set your path location(for example C:\Users\<USER_NAME>\certificate-test)
+
+```
+    PS> mkdir C:\Users\<USER_NAME>\certificate-test\root-ca    
     PS> mkdir C:\Users\<USER_NAME>\certificate-test\root-ca\db
     PS> mkdir C:\Users\<USER_NAME>\certificate-test\root-ca\private
-    
+```    
 2. Create files .db and .attr
+
+```
     PS> New-Item C:\Users\<USER_NAME>\certificate-test\root-ca\db\root-ca.db -type file
-    PS> New-Item C:\Users\<USER_NAME>\certificate-test\root-ca\db\root-ca.db.attr -type file
+    PS> New-Item C:\Users\<USER_NAME>\certificate-test\root-ca\db\root-ca.db.attr -type file  
+```
+
+3. Create file C:\Users\<USER_NAME>\certificate-test\root-ca\ca\config\root-ca.conf with the content like here https://jamielinux.com/docs/openssl-certificate-authority/appendix/root-configuration-file.html
+
+4. Go to path of certificates and pass the commands for creating .csr file. and private key The pass can be for example *pass123*
+
+```
+    PS> cd C:\Users\<USER_NAME>\certificate-test
+    PS> openssl req -new -config root-ca\ca\config\root-ca.conf -out root-ca\ca\root-ca.csr -keyout root-ca\private\root-ca.key  -batch  -passout pass:pass123
+    PS> openssl ca -selfsign -config root-ca\ca\config\root-ca.conf -in root-ca\ca\root-ca.csr -out root-ca\ca\root-ca.crt -extensions root_ca_ext -batch -passin pass:pass123
+```
+
 
 
