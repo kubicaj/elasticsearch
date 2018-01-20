@@ -256,12 +256,13 @@ Search Guard not initialized (SG11). See https://github.com/floragunncom/search-
 Now you have to init searchquard. Go to folder <ES>\plugins\search-guard-5\tools\ and init searchquard via script *sgadmin.bat* with parameter:
     * ks - The location of the keystore containing the admin certificate and all intermediate certificates, if any. You can use an absolute or relative path. Relative paths are resolved relative to the execution directory of sgadmin.
     * kspass - The password for the keystore.
-    * The location of the truststore containing the root certificate. You can use an absolute or relative path. Relative paths are resolved relative to the execution directory of sgadmin.
-    * The password for the truststore.
+    * ksalias - The alias of the admin certificate, if any.
+    * ts - The location of the truststore containing the root certificate. You can use an absolute or relative path. Relative paths are resolved relative to the execution directory of sgadmin.
+    * tspass - The password for the truststore.
 
 ```
 # Sample:
-.\sgadmin.bat -cd C:\elasticsearch\plugins\search-guard-5\sgconfig\ -ks C:\elasticsearch\config\admin\admin-keystore.jks -kspass pass123 -ts C:\elasticsearch\config\admin\admin-truststore.jks -tspass pass123 -nhnv -icl --diagnose
+.\sgadmin.bat -cd C:\elasticsearch\plugins\search-guard-5\sgconfig\ -ks C:\elasticsearch\config\admin\admin-keystore.jks -kspass pass123 -ksalias admin -ts C:\elasticsearch\config\admin\admin-truststore.jks -tspass pass123 -nhnv -icl --diagnose
 ```
 
 The output in case of successfully result
