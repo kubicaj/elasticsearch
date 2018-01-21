@@ -1,21 +1,20 @@
 # Instalation of search-quard plugin on Windows OS
 
 ### Requirements
-* elasticsearch version 5.3.1
+* elasticsearch version 5.5.3
 * Windows OS
 * powershell
 * openssl
 * keytool
 * root certificate (if not exists then generate)
 * root private key for sign the node certificate
-* intermediate certificate
 
 ## Download plugin
 At first you have to download plugin from elasticserch repository. Before installation, check if you have correct settings of maven to access central repository.
 You have to open powershell pass the following command:
 
 ```
-    PS> <ELASTICSEARCH-HOME>/bin/elasticsearch-plugin install -b com.floragunn:search-guard:5-5.3.1-15
+    PS> <ELASTICSEARCH-HOME>/bin/elasticsearch-plugin install -b com.floragunn:search-guard-5:5.5.3-16
 ```   
 
 After instalattion the following warning will be display. But do not worry. In installation command you passed the argument **-b** which means that you automatic confirm of security permissions
