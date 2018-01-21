@@ -64,7 +64,7 @@ This certificate is mostly provided by customers or third parties. But if you ne
 1. Create root key. Pass the following command and follow instruction in command line
 
 ```
-    PS> openssl genrsa -des3 -out rootCA.key 2048
+PS> openssl genrsa -des3 -out rootCA.key 2048
 ```
 
 2. Create self sign the Root Certificate. Pass the following command and follow instruction in command line
@@ -304,11 +304,11 @@ The login page is display and you have to pass the *sq user and password*. For e
   "cluster_name" : "elasticsearch",
   "cluster_uuid" : "WcFg-WUsS4-W0hBquly-ZQ",
   "version" : {
-    "number" : "5.3.1",
+    "number" : "5.5.3",
     "build_hash" : "5f9cf58",
     "build_date" : "2017-04-17T15:52:53.846Z",
     "build_snapshot" : false,
-    "lucene_version" : "6.4.2"
+    "lucene_version" : "6.6.0"
   },
   "tagline" : "You Know, for Search"
 }
